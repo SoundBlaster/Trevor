@@ -10,8 +10,8 @@
 
 ## Statistics
 
-- **Total Archived Tasks:** 5
-- **Phases:** P0 (4), P1 (1)
+- **Total Archived Tasks:** 6
+- **Phases:** P0 (4), P1 (2)
 ```
 
 Now I will move the PRD file to the archive directory:{"source_path": "Trevor/SPECS/INPROGRESS/P0.1_Freeze_MVP_Scope.md", "destination_path": "Trevor/SPECS/TASKS_ARCHIVE/P0.1_Freeze_MVP_Scope.md"}
