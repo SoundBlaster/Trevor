@@ -1,10 +1,13 @@
-# INSTALL_SWIFT — Install Swift Toolchain
+# INSTALL_SWIFT — Install Swift Toolchain (Trevor)
 
-**Version:** 1.0.0
+**Version:** 2.0.0
+**Project:** Trevor Mouse Tremor Filter (macOS phases P0-P6)
 
 ## Purpose
 
-Install Swift compiler and toolchain required for building and testing Hyperprompt. This is a prerequisite for EXECUTE command.
+Install Swift compiler and toolchain required for building and testing Trevor macOS implementation (FilterCore, Event Pipeline, UI, Safety, QA phases). This is a prerequisite for EXECUTE command when working on P0-P6 tasks.
+
+**Note:** Not needed for W0 (Web Tools) tasks, which use Node.js/npm instead.
 
 ---
 
@@ -89,18 +92,31 @@ swift --version
 
 ## Verification
 
-Test Swift installation with Hyperprompt:
+Test Swift installation with Trevor:
 
 ```bash
-cd /home/user/Hyperprompt
+cd /Users/egor/Development/GitHub/Trevor
 
 # Build project
 swift build
 
-# Run tests
+# Run tests (P0-P6 implementation tests)
 swift test
 
-# Expected: All tests pass
+# Expected: All tests pass (will vary by phase)
+# P1: 23+ unit tests (FilterCore tests)
+# P2: 12+ event pipeline tests
+# P3-P6: UI, safety, export, QA tests
+```
+
+**Quick check if Swift is ready for EXECUTE:**
+```bash
+swift --version
+# Should show: Swift version X.Y (or DEVELOPMENT-SNAPSHOT)
+
+# Then run from Trevor root:
+swift test
+# If all tests pass, Swift is ready
 ```
 
 ---

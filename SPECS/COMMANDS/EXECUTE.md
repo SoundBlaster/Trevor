@@ -1,53 +1,63 @@
-# EXECUTE — Execute Current Task
+# EXECUTE — Execute Current Task (Trevor: Mouse Tremor Filter)
 
-**Version:** 2.0.0
+**Version:** 2.1.0
+**Project:** Trevor Mouse Tremor Filter (W0 Web Tools + P0-P6 macOS phases)
 
 ## Purpose
 
-Provide a **thin workflow wrapper** around task execution. This command:
-1. Performs pre-flight checks (git clean, dependencies satisfied)
-2. Displays the implementation plan from PRD
+Provide a **thin workflow wrapper** around task execution for both web and macOS development. This command:
+1. Performs pre-flight checks (git clean, dependencies satisfied, toolchains installed)
+2. Displays the implementation plan from PRD + relevant test cases from TestPlan
 3. **[DEVELOPER/CLAUDE DOES THE ACTUAL WORK]**
-4. Validates results against acceptance criteria
+4. Validates results against TestPlan acceptance criteria
 5. Updates progress markers and commits
 
 **Important:** EXECUTE is NOT an AI agent that implements code automatically. It's a structured checklist runner that automates the workflow **around** implementation.
 
-> **CRITICAL VALIDATION REQUIREMENT**
->
-> - **Swift must be installed before starting EXECUTE.** If it's missing, run INSTALL_SWIFT first: **[`PRIMITIVES/INSTALL_SWIFT.md`](./PRIMITIVES/INSTALL_SWIFT.md)**
-> - After code changes, validation MUST start with the Git LFS-backed cache restore command and then run tests (which also build):
->   ```bash
->   ./.github/scripts/restore-build-cache.sh
->   swift test 2>&1
->   ```
-> - Do NOT commit code that doesn't compile or has failing tests
-> - If Swift or the cache cannot be used in the environment, note this explicitly in the commit message and task summary
+## Critical Validation Requirements
+
+### For Web Tools (W0) Tasks:
+- **Node.js + npm** required for web tests
+- After code changes, validation MUST run:
+  ```bash
+  npm test          # Run Jest tests
+  npm run build     # Build TypeScript/bundler
+  ```
+
+### For macOS (P0-P6) Tasks:
+- **Swift must be installed before starting EXECUTE.** If missing, run INSTALL_SWIFT first: **[`PRIMITIVES/INSTALL_SWIFT.md`](./PRIMITIVES/INSTALL_SWIFT.md)**
+- After code changes, validation MUST run:
+  ```bash
+  ./.github/scripts/restore-build-cache.sh  # Optional: speed up builds
+  swift test 2>&1   # Run XCTest + build
+  ```
+
+- Do NOT commit code that doesn't compile or has failing tests
+- If Swift or cache unavailable, note explicitly in commit message
 
 ## Philosophy
 
-All implementation instructions already exist in:
-- **PRD** — step-by-step plan, templates, acceptance criteria
-- **Design Specs** — architecture, algorithms, data structures
-- **Workplan** — context, dependencies, estimates
+All implementation instructions exist in:
+- **Workplan.md** — phase context, dependencies, parallelization
+- **TestPlan.md** — step-by-step test procedures, acceptance criteria
+- **PRD** — atomic task breakdown, acceptance criteria per subtask
+- **Design Specs** — architecture, algorithms (FilterCore One Euro filter, etc.)
 
 EXECUTE simply:
-- Checks prerequisites
-- Shows the plan
+- Checks prerequisites + toolchains
+- Shows plan + test requirements
 - Lets you work
-- Validates results
+- Validates against tests (web or macOS or both)
 - Commits and updates documentation
-
-**Important:** Follow the [XP-Inspired TDD Workflow (Outside-In)](../RULES/03_XP_TDD_Workflow.md) when implementing tasks.
-This ensures test-driven development, incremental delivery, and continuous main-branch readiness.
 
 ---
 
 ## Input
 
-- `DOCS/INPROGRESS/next.md` — current task (extract TASK_ID)
-- `DOCS/INPROGRESS/{TASK_ID}_{TASK_NAME}.md` — PRD with implementation plan
-- `DOCS/Workplan.md` — project context
+- `SPECS/INPROGRESS/next.md` — current task (extract PHASE_ID.TASK_ID)
+- `SPECS/INPROGRESS/{PHASE_ID}_{TASK_NAME}.md` — PRD with implementation plan
+- `SPECS/PRD/Workplan.md` — phase context, parallelization
+- `SPECS/PRD/TestPlan.md` — test cases and acceptance criteria for phase
 
 ---
 
@@ -55,11 +65,22 @@ This ensures test-driven development, incremental delivery, and continuous main-
 
 ### Phase 1: Pre-Flight Checks
 
-**Purpose:** Ensure environment is ready for work
+**Purpose:** Ensure environment is ready for work (web and/or macOS)
 
-1. **Ensure Swift is available (install if missing):**
-   - Run **[INSTALL_SWIFT](./PRIMITIVES/INSTALL_SWIFT.md)** command if Swift not installed
-   - Confirm installation: `swift --version`
+1. **Determine task track and install required toolchains:**
+   ```bash
+   # Extract track from next.md (W0 or macOS P0-P6)
+   TASK_PHASE=$(head -1 SPECS/INPROGRESS/next.md | grep -oE "^W0|P[0-6]")
+
+   if [[ $TASK_PHASE == "W0"* ]]; then
+     # Web Tools (W0) — require Node.js + npm
+     which node && npm --version
+     [ $? -ne 0 ] && echo "Node.js/npm required for web tools. Install first."
+   else
+     # macOS (P0-P6) — require Swift
+     swift --version || run PRIMITIVES/INSTALL_SWIFT.md
+   fi
+   ```
 
 2. **Verify Git state:**
    ```bash
@@ -69,46 +90,55 @@ This ensures test-driven development, incremental delivery, and continuous main-
 
 3. **Load task context:**
    ```bash
-   TASK_ID=$(head -1 DOCS/INPROGRESS/next.md | sed 's/# Next Task: \(.*\) —.*/\1/')
-   PRD="DOCS/INPROGRESS/${TASK_ID}_*.md"
+   PHASE_ID=$(head -1 SPECS/INPROGRESS/next.md | grep -oE "^[WP][0-6].*[^—]" | cut -d' ' -f1)
+   TASK_NAME=$(head -1 SPECS/INPROGRESS/next.md | sed 's/# Next Task: .* — //')
+   PRD="SPECS/INPROGRESS/${PHASE_ID}_*.md"
    ```
 
 4. **Check dependencies:**
    - Read `Dependencies:` line from next.md
-   - Verify all upstream tasks marked `[x]` in Workplan
+   - Verify all upstream tasks marked `[x]` in Workplan.md
    - **Exit if dependencies not satisfied**
 
 5. **Verify PRD exists:**
-   - Check `DOCS/INPROGRESS/{TASK_ID}_*.md` exists
+   - Check `SPECS/INPROGRESS/{PHASE_ID}_*.md` exists
    - **Exit if not found:** "Run PLAN command first"
 
-6. **Display plan summary:**
+6. **Load test requirements from TestPlan:**
+   - Find section in TestPlan.md matching PHASE_ID (e.g., "2.1 FilterCore Tests" for P1)
+   - Extract automated tests, manual golden tests, acceptance criteria
+   - Display relevant test cases that will be run during post-flight
+
+7. **Display plan summary:**
    ```
    ╔════════════════════════════════════════════════════════════╗
-   ║  EXECUTE: {TASK_ID} — {TASK_NAME}                         ║
+   ║  EXECUTE: {PHASE_ID}.{TASK_NAME}                          ║
+   ║  Track: {W0 Web Tools | macOS P0-P6}                      ║
    ╚════════════════════════════════════════════════════════════╝
 
-   📋 Task: {TASK_ID} — {TASK_NAME}
-   📄 PRD: DOCS/INPROGRESS/{TASK_ID}_{TASK_NAME}.md
-   ⏱️  Estimated: {TIME}
+   📋 Task: {PHASE_ID} — {TASK_NAME}
+   📄 PRD: SPECS/INPROGRESS/{PHASE_ID}_{TASK_NAME}.md
+   🧪 Tests: [Reference TestPlan.md section X.Y]
    🔗 Dependencies: {LIST or "None"}
 
-   📝 Plan Overview:
-   - Phase 1: {NAME} ({SUBTASK_COUNT} subtasks)
-   - Phase 2: {NAME} ({SUBTASK_COUNT} subtasks)
-   - Phase 3: {NAME} ({SUBTASK_COUNT} subtasks)
+   📝 Implementation Plan:
+   - Subtask 1: {NAME} ({CONTEXT})
+   - Subtask 2: {NAME} ({CONTEXT})
+   - [...]
 
+   ✅ Test Cases: {COUNT} (from TestPlan.md)
    ✅ Acceptance Criteria: {COUNT} items
-   ✅ Quality Checklist: {COUNT} items
    ```
 
-7. **Prompt user:**
+8. **Prompt user:**
    ```
-   Ready to execute {TASK_ID}?
+   Ready to execute {PHASE_ID}?
    - PRD contains all implementation instructions
-   - Templates available in PRD §8
-   - Acceptance criteria in PRD §3.3
-   - Quality checklist in PRD §7.4
+   - TestPlan.md contains all test requirements
+   - Acceptance criteria tied to tests
+
+   After implementation:
+   {Track-specific tests will run}
 
    [Enter] to continue, [Ctrl+C] to abort
    ```
@@ -146,9 +176,46 @@ If `--interactive` mode:
 
 ### Phase 3: Post-Flight Validation
 
-**Purpose:** Verify implementation meets requirements
+**Purpose:** Verify implementation meets requirements (TestPlan-driven)
 
-**CRITICAL:** Every EXECUTE cycle MUST restore the Git LFS-backed build cache and run `swift test` (which performs the build) before committing!
+**CRITICAL:** Validation commands depend on task track (Web vs. macOS)
+
+#### For Web Tools (W0) Tasks:
+
+1. **Run Jest tests:**
+   ```bash
+   npm test --passWithNoTests 2>&1
+   ```
+
+   **If tests fail:**
+   - Fix all failing tests before proceeding
+   - Do NOT commit code with failing tests
+   - Re-run `npm test` until all pass
+
+2. **Build check:**
+   ```bash
+   npm run build 2>&1
+   ```
+
+   **If build fails:**
+   - Fix all compilation/bundler errors
+   - Re-run `npm run build` until it succeeds
+
+3. **Performance check (if applicable to phase):**
+   - For W0.2 Playground: Verify <16ms frame time
+   - Run: `npm run perf` (if defined in package.json)
+
+4. **Collect results:**
+   ```
+   Web Tools Validation (W0):
+   [✓] npm test — PASS (N tests passed)
+   [✓] npm run build — PASS (0 errors)
+   [✓] Performance — PASS (<16ms frame time)
+
+   Status: READY TO COMMIT
+   ```
+
+#### For macOS (P0-P6) Tasks:
 
 1. **OPTIONAL: Restore build cache for faster compilation:**
    ```bash
@@ -156,100 +223,74 @@ If `--interactive` mode:
    ./.github/scripts/restore-build-cache.sh
    ```
 
-   **What this does:**
-   - Restores pre-built Swift package dependencies from `.build-cache/`
-   - Eliminates dependency resolution and compilation time
-   - Uses platform-specific cache: `swift-build-cache-{OS}-{ARCH}.tar.gz`
-
-   **If cache doesn't exist:**
-   - Script will show available caches or indicate none exist
-   - First build will be slower (82s), but subsequent builds faster (2-5s incremental)
-   - After successful build, create cache: `./.github/scripts/create-build-cache.sh`
-
    **Notes:**
-   - Cache is stored in `.build-cache/` (tracked via Git LFS)
    - Safe to skip if cache not available — build will work normally
-   - Update cache after changing `Package.swift`: `./.github/scripts/update-build-cache.sh`
+   - After successful build: `./.github/scripts/create-build-cache.sh`
 
-2. **MANDATORY: Use cache-backed validation instead of bare `swift build`:**
+2. **MANDATORY: Run Swift tests:**
    ```bash
-   # REQUIRED - Must pass before commit
-   ./.github/scripts/restore-build-cache.sh
+   ./.github/scripts/restore-build-cache.sh  # Optional speedup
    swift test 2>&1
    ```
 
    **If `swift test` (build + tests) fails:**
-   - Fix all compilation errors or failing tests before proceeding
+   - Fix all compilation errors or failing tests
    - Do NOT commit code that doesn't compile
-   - Re-run tests (which rebuild) until they pass
+   - Re-run `swift test` until all pass
 
-   **If `swift test` fails:**
-   - Fix all failing tests before proceeding
-   - Do NOT commit code with failing tests
-   - Re-run tests until all pass
-
-   **After successful first build (if no cache was used):**
-   ```bash
-   # Create cache for future use (saves 70+ seconds on next build)
-   ./.github/scripts/create-build-cache.sh
-   ```
-
-3. **Extract additional verification commands from PRD §3.3:**
+3. **Extract verification commands from PRD:**
    - Parse "Acceptance Criteria per Task" section
-   - Find validation commands (ls, grep, etc.)
+   - Find additional validation commands (e.g., performance benchmarks)
 
-4. **Run each verification command:**
-   ```bash
-   # Example for A1:
-   swift package resolve
-   swift build           # MANDATORY
-   swift test            # MANDATORY
-   ls -la Sources/       # Check directories exist
-   cat Package.swift | grep "swift-crypto"  # Check dependency
-   ```
+4. **Run performance tests (if applicable to phase):**
+   - P1.7: FilterCore micro-benchmarks — `swift run benchmark-filter`
+   - P6.3: Performance profiling — `instruments` (manual or scripted)
 
 5. **Collect results:**
    ```
-   Acceptance Criteria Validation:
-   [✓] swift package resolve — PASS (3 dependencies resolved)
+   macOS Validation (P1 example):
+   [✓] swift test — PASS (23 tests passed, 0 failures)
    [✓] swift build — PASS (0 errors, 0 warnings)
-   [✓] swift test — PASS (0 tests, 0 failures)
-   [✓] 6 source directories exist — PASS
-   [✓] Package.swift contains dependencies — PASS
+   [✓] FilterCore latency — PASS (<0.5ms per sample)
+   [✓] No NaN/Inf output — PASS (invariants verified)
 
-   Quality Checklist from PRD §7.4:
-   [✓] All 6 source module directories exist
-   [✓] All 7 test module directories exist
-   [✓] Package.swift contains all 3 dependencies
-   [✓] Package.swift defines all 6 module targets
-   [✓] CLI defined as executableTarget
-   [~] No compiler warnings (manual check)
-
-   Overall: 11/12 items verified (92%)
-   ```
-
-6. **Generate completion report:**
-   ```
-   ╔════════════════════════════════════════════════════════════╗
-   ║  VALIDATION REPORT: {TASK_ID}                              ║
-   ╚════════════════════════════════════════════════════════════╝
-
-   Subtasks completed: 13/13 (100%)
-   Acceptance criteria: 5/5 passed (100%)
-   Quality checklist: 11/12 verified (92%)
-   Build: PASS ✓
-   Tests: PASS ✓
+   Quality Checklist:
+   [✓] Unit tests cover all code paths
+   [✓] Performance benchmarks met
+   [✓] No compiler warnings
 
    Status: READY TO COMMIT
    ```
 
-7. **If validation fails:**
+#### Common Validation Steps (Both Tracks):
+
+6. **Run git diff to confirm expected changes:**
+   ```bash
+   git diff --stat HEAD
+   ```
+
+7. **Generate completion report:**
+   ```
+   ╔════════════════════════════════════════════════════════════╗
+   ║  VALIDATION REPORT: {PHASE_ID}_{TASK_NAME}                ║
+   ║  Track: {Web Tools (W0) | macOS (P0-P6)}                  ║
+   ╚════════════════════════════════════════════════════════════╝
+
+   Implementation: COMPLETE
+   Tests: PASS ✓
+   Acceptance Criteria: {X/Y} passed
+   Build: PASS ✓
+
+   Status: READY TO COMMIT
+   ```
+
+8. **If validation fails:**
    ```
    ✗ VALIDATION FAILED
 
    Failed checks:
-   - swift build → 3 errors
-   - Quality item #7: Module boundaries not defined
+   - npm test → {N} failures
+   - Performance → Frame time {X}ms (target: <16ms)
 
    Fix issues and re-run: claude "EXECUTE: validate only"
    ```
@@ -262,44 +303,49 @@ If `--interactive` mode:
 
 1. **Update next.md:**
    - Mark task complete: add `**Status:** ✅ Completed on {DATE}`
-   - Mark all checklist items `[x]`
+   - Mark all subtask checklist items `[x]`
    - Add completion timestamp
+   - Note: Don't delete next.md, just mark complete (SELECT creates new one for next task)
 
 2. **Update Workplan.md:**
-   - Find task by ID (e.g., `### A1:`)
+   - Find task by phase ID (e.g., `### W0.2:` or `### P1.2:`)
    - Mark as completed: `- [x]` instead of `- [ ]`
    - Remove `**Status:** INPROGRESS`
+   - Update progress in phase header if applicable
 
 3. **Save task summary (if applicable):**
-   - **IMPORTANT:** Task summaries must be saved in `DOCS/INPROGRESS/` folder
-   - File naming: `{TASK_ID}-summary.md` (e.g., `A1-summary.md`, `A2-summary.md`)
-   - Include: task metrics, key findings, deliverables, acceptance criteria verification, next steps
-   - This is a comprehensive report for the task, complementing the checklist in the PRD
+   - **IMPORTANT:** Task summaries must be saved in `SPECS/INPROGRESS/` folder
+   - File naming: `{PHASE_ID}-{TASK_NAME}-summary.md` (e.g., `W0.2-Playground-summary.md`, `P1.2-FilterCore-summary.md`)
+   - Include: subtasks completed, acceptance criteria verification, test results, key findings, deliverables, next task suggestions
+   - This is a comprehensive report complementing the PRD and test results
 
 4. **Auto-detect deliverables:**
    ```bash
-   # Files created/modified since task start
+   # Files created/modified during task implementation
    git diff --name-status HEAD
    ```
 
 5. **Create commit:**
-   Follow the lightweight checklist in [`DOCS/COMMANDS/PRIMITIVES/COMMIT.md`](./PRIMITIVES/COMMIT.md) to stage and record the changes before pushing.
+   Follow the lightweight checklist in [`SPECS/COMMANDS/PRIMITIVES/COMMIT.md`](./PRIMITIVES/COMMIT.md) to stage and record the changes before pushing.
 
 6. **Push to remote:**
    ```bash
-   git push -u origin {branch-name}
+   git push -u origin $(git rev-parse --abbrev-ref HEAD)
    ```
 
 7. **Suggest next action:**
    ```
-   ✅ Task {TASK_ID} completed successfully!
+   ✅ Task {PHASE_ID} completed successfully!
 
    🎯 Next steps:
-   1. Run SELECT to choose next task
+   1. Run SELECT to choose next task (W0 or P0-P6)
       $ claude "Выполни команду SELECT"
 
-   2. Or create a PR if phase complete
-      $ gh pr create --title "Complete Phase 1: Foundation"
+   2. Or ARCHIVE completed tasks if multiple done
+      $ claude "Выполни команду ARCHIVE"
+
+   3. Or create a PR if phase complete
+      $ gh pr create --title "Complete Phase {Phase_Name}"
    ```
 
 ---
@@ -486,28 +532,46 @@ Finalizing...
 ✗ Pre-flight check failed: Git working tree not clean
 
 Uncommitted changes:
-  M DOCS/Workplan.md
+  M SPECS/PRD/Workplan.md
   ?? new_file.swift
 
 Fix: Commit or stash changes, then retry
+```
+
+**Toolchain not installed:**
+```
+✗ Pre-flight check failed: Required toolchain missing
+
+Task W0.2 (Web Tools) requires: Node.js + npm
+  Current: npm not found
+
+Fix: Install Node.js/npm first, or run INSTALL primitive
+
+---
+
+Task P1.2 (macOS) requires: Swift compiler
+  Current: Swift version not found
+
+Fix: Run INSTALL_SWIFT first
+     $ claude "Run PRIMITIVES/INSTALL_SWIFT"
 ```
 
 **Dependencies not met:**
 ```
 ✗ Pre-flight check failed: Dependencies not satisfied
 
-Task A2 requires:
-  [x] A1 — Project Initialization ✓
-  [ ] A3 — Domain Types ✗
+Task P1.2 requires:
+  [x] P0.2 — Finalize specs ✓
+  [ ] P1.1 — Define FilterCore API ✗
 
-Fix: Complete A3 first or update Workplan dependencies
+Fix: Complete P1.1 first or update COMBINED_Workplan dependencies
 ```
 
 **No PRD:**
 ```
 ✗ Pre-flight check failed: PRD not found
 
-Expected: DOCS/INPROGRESS/A1_Project_Initialization.md
+Expected: SPECS/INPROGRESS/P1.2_FilterCore.md
 
 Fix: Run PLAN command first
      $ claude "Выполни команду PLAN"
@@ -517,31 +581,77 @@ Fix: Run PLAN command first
 
 ### Validation Failures
 
-**Build errors:**
+**Web Tools build errors:**
 ```
-✗ Validation failed: swift build
+✗ Validation failed: npm run build
 
 Build errors:
-  Sources/Core/File.swift:10: error: use of unresolved identifier 'foo'
-  Sources/Parser/Lexer.swift:24: error: missing return
+  src/filter.ts:42: error TS2345 'foo' is not assignable to type 'number'
+  src/playground.tsx:15: error: JSX element must be closed
 
 Fix issues and re-run validation:
   $ claude "EXECUTE: validate only"
 ```
 
-**Acceptance criteria not met:**
+**Web Tools test failures:**
+```
+✗ Validation failed: npm test
+
+Test failures:
+  ● Playground canvas tests › should render preset selector
+    Expected: toBeInTheDocument()
+    Received: null
+
+  ● Performance tests › frame rate must be <16ms
+    Expected: < 16
+    Received: 24
+
+Fix tests and re-run:
+  $ npm test
+  $ claude "EXECUTE: validate only"
+```
+
+**macOS build errors:**
+```
+✗ Validation failed: swift build
+
+Build errors:
+  Sources/Core/Filter.swift:47: error: use of unresolved identifier 'normalize'
+  Sources/Event/Injection.swift:23: error: missing return
+
+Fix issues and re-run validation:
+  $ claude "EXECUTE: validate only"
+```
+
+**macOS test failures:**
+```
+✗ Validation failed: swift test
+
+Test failures:
+  FilterCoreTests.FilterCore_NaNInvariant: XCTAssertFalse failed
+    - Output contains NaN (invalid numerical stability)
+
+  EventPipelineTests.EventInjection_Latency: XCTAssertLessThan failed
+    - Latency 2.5ms (target: <2.0ms)
+
+Fix tests and re-run:
+  $ swift test
+  $ claude "EXECUTE: validate only"
+```
+
+**Acceptance criteria not met (from TestPlan):**
 ```
 ✗ Validation failed: 3/5 acceptance criteria not met
 
-Failed:
-  [✗] All 6 directories exist
-      → Only 4 directories found
-  [✗] Package.swift contains dependencies
-      → swift-crypto not declared
-  [✗] Empty test suite runs
-      → swift test failed with errors
+Failed (from TestPlan.md):
+  [✗] FilterCore latency < 0.5ms per sample
+      → Measured: 0.8ms (P1.7 requirement)
+  [✗] No NaN/Inf output under variable dt
+      → Found: Inf under dt=0 edge case
+  [✗] Presets feel distinct
+      → Subjective, needs manual verification
 
-Fix issues and retry
+Fix issues and update tests, then retry
 ```
 
 ---

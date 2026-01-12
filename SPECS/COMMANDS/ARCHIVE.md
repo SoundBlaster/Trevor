@@ -1,25 +1,26 @@
-# ARCHIVE — Archive Completed Tasks
+# ARCHIVE — Archive Completed Tasks (Trevor: Mouse Tremor Filter)
 
-**Version:** 2.0.0
+**Version:** 2.1.0
+**Project:** Trevor Mouse Tremor Filter (W0 Web Tools + P0-P6 macOS phases)
 
 ## Purpose
 
-Move completed PRDs from `INPROGRESS/` to `TASKS_ARCHIVE/` and remove from `next.md`. Counterbalance to SELECT.
+Move completed PRDs from `SPECS/INPROGRESS/` to `SPECS/TASKS_ARCHIVE/` and remove from `next.md`. Counterbalance to SELECT. Helps organize completed work by phase (W0, P0-P6).
 
 ## Philosophy
 
-- Keep `INPROGRESS/` clean (only active work)
-- Preserve completed PRDs for reference
+- Keep `SPECS/INPROGRESS/` clean (only active work)
+- Preserve completed PRDs for reference (organized by phase)
 - Remove completed tasks from next.md (opposite of SELECT)
-- Run periodically — not required after every task
+- Run periodically — batch cleanup after multiple tasks complete
 
 ---
 
 ## Input
 
-- `DOCS/Workplan.md` — source of truth (`[x]` = complete)
-- `DOCS/INPROGRESS/next.md` — remove completed task references
-- `DOCS/INPROGRESS/{TASK_ID}_{TASK_NAME}.md` — PRD files to archive
+- `SPECS/PRD/Workplan.md` — source of truth (`[x]` = complete)
+- `SPECS/INPROGRESS/next.md` — remove completed task references
+- `SPECS/INPROGRESS/{PHASE_ID}_{TASK_NAME}.md` — PRD files to archive
 
 ---
 
@@ -27,24 +28,25 @@ Move completed PRDs from `INPROGRESS/` to `TASKS_ARCHIVE/` and remove from `next
 
 ### 1. Find Completed Tasks
 
-- Scan `INPROGRESS/*.md` for PRD files
-- Check `Workplan.md`: task marked `[x]`
+- Scan `SPECS/INPROGRESS/*.md` for PRD files
+- Check `SPECS/PRD/Workplan.md`: task marked `[x]`
 - Add to candidates (will remove from `next.md` if present)
 - Archive regardless of whether task is currently active in `next.md`
+- Organize by phase (W0.x, P0.x, P1.x, ..., P6.x) for archive index
 
 ### 2. Archive Each Task
 
-The per-task archive operations (remove the entry from `next.md`, move the PRD file, append the archive timestamp) are covered step-by-step in [`DOCS/COMMANDS/PRIMITIVES/ARCHIVE_TASK.md`](./PRIMITIVES/ARCHIVE_TASK.md). Follow that primitive for each candidate before updating the index.
+The per-task archive operations (remove the entry from `next.md`, move the PRD file, append the archive timestamp) are covered step-by-step in [`SPECS/COMMANDS/PRIMITIVES/ARCHIVE_TASK.md`](./PRIMITIVES/ARCHIVE_TASK.md). Follow that primitive for each candidate before updating the index.
 
 ### 3. Update INDEX.md
 
-Create/update `DOCS/TASKS_ARCHIVE/INDEX.md` with links organized by phase.
+Create/update `SPECS/TASKS_ARCHIVE/INDEX.md` with links organized by phase (W0, P0, P1, ... P6).
 
-Use [`DOCS/COMMANDS/PRIMITIVES/UPDATE_ARCHIVE_INDEX.md`](./PRIMITIVES/UPDATE_ARCHIVE_INDEX.md) for the detailed edit pattern, formatting guidelines, and statistics adjustments; mirror the existing phase headings and bullet entries in the file when you add a new task.
+Use [`SPECS/COMMANDS/PRIMITIVES/UPDATE_ARCHIVE_INDEX.md`](./PRIMITIVES/UPDATE_ARCHIVE_INDEX.md) for the detailed edit pattern, formatting guidelines, and statistics adjustments; mirror the existing phase headings and bullet entries in the file when you add a new task.
 
 ### 4. Commit
 
-Follow the steps documented in [`DOCS/COMMANDS/PRIMITIVES/COMMIT.md`](./PRIMITIVES/COMMIT.md) to stage and record the completed archive actions.
+Follow the steps documented in [`SPECS/COMMANDS/PRIMITIVES/COMMIT.md`](./PRIMITIVES/COMMIT.md) to stage and record the completed archive actions.
 
 ---
 

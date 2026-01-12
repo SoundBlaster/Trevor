@@ -1,10 +1,11 @@
-# FLOW — Iterative Development Workflow
+# FLOW — Iterative Development Workflow (Trevor: Mouse Tremor Filter)
 
-**Version:** 2.0.0
+**Version:** 2.1.0
+**Project:** Trevor Mouse Tremor Filter (W0 Web Tools + P0-P6 macOS phases)
 
 ## Purpose
 
-Defines the canonical iterative workflow for **Hyperprompt** development. This cycle ensures systematic progression through `DOCS/Workplan.md` while maintaining clean task tracking and validation.
+Defines the canonical iterative workflow for Trevor development. This cycle ensures systematic progression through `SPECS/PRD/Workplan.md` while maintaining clean task tracking and validation for both web and macOS tracks.
 
 FLOW is the top-level orchestrator; each step is a dedicated command with its own responsibility.
 
@@ -134,8 +135,8 @@ Clean workspace, move completed PRDs to `DOCS/TASKS_ARCHIVE/`, and update the ar
 
 ## Related Documentation
 
-- `DOCS/COMMANDS/README.md` — Command system overview
-- `DOCS/COMMANDS/PROGRESS.md` — Status tracking across tasks
-- `DOCS/PRD/PRD_EditorEngine.md` — Canonical requirements (current primary PRD)
-- `DOCS/Workplan.md` — Master task list
-- `DOCS/RULES/03_XP_TDD_Workflow.md` — Development methodology
+- `SPECS/COMMANDS/README.md` — Command system overview
+- `SPECS/COMMANDS/PROGRESS.md` — Status tracking across tasks
+- `SPECS/PRD/Workplan.md` — Master task list (W0 + P0-P6)
+- `SPECS/PRD/TestPlan.md` — QA testing strategy (aligned to phases)
+- `SPECS/RULES/01_PRD_PROMPT.md` — PRD generation rules

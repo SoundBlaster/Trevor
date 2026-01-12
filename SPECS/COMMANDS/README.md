@@ -1,16 +1,18 @@
-# Hyperprompt Workflow Commands
+# Trevor: Mouse Tremor Filter — Workflow Commands
 
 **Version:** 2.0.0
+**Project:** Mouse Tremor Filtering (Web Tools + macOS Application)
+**Documentation Source:** [Workplan.md](../PRD/Workplan.md) + [TestPlan.md](../PRD/TestPlan.md)
 
 ## Overview
 
-Five commands implement a documentation-driven development workflow with three-level task hierarchy.
+Five commands implement a documentation-driven development workflow for the Trevor project, spanning W0 (Web Tools) and P0-P6 (macOS phases).
 
 | Command | Purpose | Details |
 |---------|---------|---------|
-| **SELECT** | Choose next task from Workplan | [SELECT.md](./SELECT.md) |
+| **SELECT** | Choose next task from COMBINED_Workplan | [SELECT.md](./SELECT.md) |
 | **PLAN** | Generate implementation-ready PRD | [PLAN.md](./PLAN.md) |
-| **EXECUTE** | Workflow wrapper (pre/post checks) | [EXECUTE.md](./EXECUTE.md) |
+| **EXECUTE** | Workflow wrapper (pre/post checks, build, test) | [EXECUTE.md](./EXECUTE.md) |
 | **PROGRESS** | Update task checklist (optional) | [PROGRESS.md](./PROGRESS.md) |
 | **ARCHIVE** | Move completed PRDs to archive | [ARCHIVE.md](./ARCHIVE.md) |
 
@@ -20,16 +22,16 @@ Five commands implement a documentation-driven development workflow with three-l
 
 ```
 ┌─────────┐
-│ SELECT  │  Choose highest priority task
+│ SELECT  │  Choose highest priority task (W0 or P0-P6)
 └────┬────┘  Updates: next.md, Workplan.md
      ↓
 ┌─────────┐
-│  PLAN   │  Generate detailed PRD
+│  PLAN   │  Generate detailed PRD (web or macOS context)
 └────┬────┘  Creates: DOCS/INPROGRESS/{TASK_ID}_{TASK_NAME}.md
      ↓
 ┌─────────┐
 │ EXECUTE │  Pre-flight → [YOU WORK] → Post-flight
-└────┬────┘  Validates, commits, pushes
+└────┬────┘  Runs web tests + Swift tests, commits, pushes
      ↓
   [REPEAT] ←──────────┐
      │                │
@@ -37,26 +39,27 @@ Five commands implement a documentation-driven development workflow with three-l
      ↓                │
 ┌─────────┐           │
 │ ARCHIVE │  Clean workspace, move completed PRDs
-└─────────┘  To: DOCS/TASKS_ARCHIVE/
+└─────────┘  To: SPECS/TASKS_ARCHIVE/
 ```
 
-**Philosophy:** All implementation instructions exist in PRD/specs. Commands automate only workflow boilerplate.
+**Philosophy:** All implementation instructions exist in Workplan.md and TestPlan.md. Commands automate only workflow boilerplate.
 
 ---
 
 ## Quick Start
 
 ```bash
-# 1. Choose task
+# 1. Choose task (W0, P0-P6 phases)
 $ claude "Выполни команду SELECT"
 
-# 2. Generate PRD
+# 2. Generate PRD (web tools or macOS)
 $ claude "Выполни команду PLAN"
 
-# 3. Execute (shows plan, you work, validates)
+# 3. Execute (pre-flight → [YOU WORK] → validate → commit)
+# Runs: web tests (Jest), macOS tests (XCTest), build checks
 $ claude "Выполни команду EXECUTE"
 
-# 4. Repeat
+# 4. Repeat for next task
 $ claude "Выполни команду SELECT"
 ```
 
@@ -66,14 +69,19 @@ $ claude "Выполни команду SELECT"
 
 | Level | File | Granularity | Purpose |
 |-------|------|-------------|---------|
-| **Strategic** | Workplan.md | 3-5 items | High-level phases, dependencies |
-| **Tactical** | next.md | 10-20 items | Daily checklist |
-| **Operational** | PRD | Atomic steps | Executable specification |
+| **Strategic** | Workplan.md | W0 + P0-P6 phases | Web tools + macOS phases, dependencies, parallelization |
+| **Tactical** | next.md | 5-15 items per task | Daily checklist for current task |
+| **Operational** | PRD | Atomic steps | Implementation steps, test cases, acceptance criteria |
 
-**Example:**
-- Workplan: `A1: Project Initialization [P0] — 2 hours`
-- next.md: `- [ ] Create Sources/Core/ directory` (20 items)
-- PRD: `Task 1.1: mkdir -p Sources/Core` (with acceptance criteria)
+**Example (W0 Track):**
+- Workplan.md: `W0.2 Pointer Stabilization Playground — depends on P1.2 (FilterCore)`
+- next.md: `- [ ] Port FilterCore to TypeScript` (5 items)
+- PRD: `Task 2.1: Implement One Euro filter in TypeScript with test cases`
+
+**Example (macOS Track):**
+- Workplan.md: `P1.2: Implement One Euro filter [High] — depends on P1.1`
+- next.md: `- [ ] Create filter.swift with interface` (8 items)
+- PRD: `Task 1.2.1: Define FilterCore API, Task 1.2.2: Implement algorithm with unit tests`
 
 ---
 
@@ -93,12 +101,13 @@ Chooses next task based on:
 
 ### PLAN
 Generates implementation-ready PRD from:
-- Task in `next.md`
-- Context from `Workplan.md`
+- Task in `next.md` (selected from Workplan.md)
+- Context from `Workplan.md` (phase, dependencies, priority)
+- Test cases from `TestPlan.md` (section corresponding to phase)
 - Rules from `01_PRD_PROMPT.md`
-- Project specs
+- Project specs (FilterCore, Event Pipeline, UI, Safety, Web Tools)
 
-**Output:** `DOCS/INPROGRESS/{TASK_ID}_{TASK_NAME}.md`
+**Output:** `SPECS/INPROGRESS/{TASK_ID}_{TASK_NAME}.md`
 
 👉 **[Full details in PLAN.md](./PLAN.md)**
 
@@ -108,18 +117,23 @@ Generates implementation-ready PRD from:
 
 **Thin workflow wrapper** (NOT an AI agent):
 
-1. **Pre-flight:** Check git, dependencies, show plan
+1. **Pre-flight:** Check git, dependencies, ensure Swift is installed
 2. **Work period:** `[DEVELOPER FOLLOWS PRD]`
-3. **Post-flight:** Validate, commit, push
+3. **Post-flight:** Run tests (web + macOS), validate against TestPlan.md, commit, push
 4. **Finalize:** Update docs, suggest next task
 
-**Important:** PRD contains all implementation instructions. EXECUTE only automates checks and commits.
+**Important:** PRD + TestPlan.md contain all implementation instructions and acceptance criteria. EXECUTE only automates checks and commits.
+
+**Tests run (depending on task type):**
+- **Web Tools (W0):** `npm test` (Jest), performance benchmarks
+- **macOS (P1-P6):** `swift test` (XCTest), FilterCore benchmarks (P1.7), performance profiling (P6.3)
+- **Both:** Build validation, git checks, cache management
 
 **Modes:**
-- Full (default) — complete workflow
+- Full (default) — complete workflow (pre-flight → work → post-flight → finalize)
 - Show plan — preview only
-- Validate only — post-implementation
-- Progress tracking — periodic checkpoints
+- Validate only — post-implementation (skip pre-flight)
+- Progress tracking — periodic checkpoints during long tasks
 
 👉 **[Full details in EXECUTE.md](./EXECUTE.md)**
 
@@ -157,31 +171,38 @@ Moves completed task PRDs from `INPROGRESS/` to `TASKS_ARCHIVE/`.
 ## File Structure
 
 ```
-DOCS/
+SPECS/
 ├── COMMANDS/              # This directory
 │   ├── README.md          # This file (overview)
 │   ├── SELECT.md          # Full SELECT spec
 │   ├── PLAN.md            # Full PLAN spec
 │   ├── EXECUTE.md         # Full EXECUTE spec
 │   ├── PROGRESS.md        # Full PROGRESS spec
-│   └── ARCHIVE.md         # Full ARCHIVE spec
+│   ├── FLOW.md            # Workflow cycle
+│   ├── REVIEW.md          # Code review command
+│   ├── ARCHIVE.md         # Full ARCHIVE spec
+│   └── PRIMITIVES/        # Atomic operations
+│       ├── COMMIT.md      # Recording changes
+│       ├── INSTALL_SWIFT.md
+│       ├── GITLFS.md
+│       ├── ARCHIVE_TASK.md
+│       └── UPDATE_ARCHIVE_INDEX.md
 │
 ├── INPROGRESS/            # Active work
 │   ├── next.md            # Current task
 │   └── {TASK_ID}_{NAME}.md  # Active task PRDs
 │
 ├── TASKS_ARCHIVE/         # Completed tasks
-│   ├── INDEX.md           # Organized by phase
+│   ├── INDEX.md           # Organized by phase (W0, P0-P6)
 │   └── {TASK_ID}_{NAME}.md  # Archived PRDs
 │
-├── Workplan.md            # Master task list
-├── RULES/
-│   └── 01_PRD_PROMPT.md   # PRD generation rules
+├── PRD/                   # Project specifications
+│   ├── Workplan.md    # Master: W0 + P0-P6 phases
+│   ├── TestPlan.md             # QA testing strategy
+│   └── [other design specs]
 │
-└── PRD/v0.0.1/            # Project specs
-    ├── 00_PRD_001.md
-    ├── 01_DESIGN_SPEC_001.md
-    └── 02_DESIGN_SPEC_SPECIFICATION_CORE.md
+└── RULES/
+    └── 01_PRD_PROMPT.md   # PRD generation rules
 ```
 
 ---
@@ -192,26 +213,39 @@ DOCS/
 ```bash
 SELECT → PLAN → EXECUTE
 ```
+*Picks next task from Workplan.md (W0 or P0-P6), generates PRD, runs implementation + tests*
+
+### Choosing Between Web (W0) and macOS (P0-P6) Work
+```bash
+# SELECT will choose based on priority and parallelization rules
+# W0 tasks fully parallel to P0-P6 (can work on both simultaneously)
+$ claude "Выполни команду SELECT"
+
+# View current selection
+$ cat SPECS/INPROGRESS/next.md | head -5
+# → Shows which phase: W0.2, P1.3, P4.1, etc.
+```
 
 ### Resuming After Break
 ```bash
-# Check current task
-$ cat DOCS/INPROGRESS/next.md
+# Check current task and phase
+$ cat SPECS/INPROGRESS/next.md
 
-# Continue with EXECUTE
+# Continue with EXECUTE (includes appropriate tests for web or macOS)
 $ claude "Выполни команду EXECUTE"
 ```
 
 ### Checking Progress
 ```bash
-# View checklist
-$ cat DOCS/INPROGRESS/next.md
+# View checklist for current task
+$ cat SPECS/INPROGRESS/next.md
 
 # View PRD details
-$ cat DOCS/INPROGRESS/A1_Project_Initialization.md
+$ cat SPECS/INPROGRESS/W0.2_Playground.md
+$ cat SPECS/INPROGRESS/P1.2_FilterCore.md
 
-# Overall Workplan status
-$ grep "^\- \[.\]" DOCS/Workplan.md | head -20
+# Overall status (see which phase completed)
+$ grep "^\- \[" SPECS/PRD/Workplan.md | grep -E "^(W0|P[0-6])"
 ```
 
 ---
@@ -229,27 +263,36 @@ For detailed error handling, see individual command files.
 
 ---
 
-## Key Principles
+## Key Principles (Trevor-Specific)
 
 1. **Single Source of Truth**
+   - Phase strategy → Workplan.md (W0 + P0-P6)
+   - Test requirements → TestPlan.md (aligned to phases)
    - Implementation details → PRD
-   - Task list → Workplan
+   - Current task → next.md
    - Commands → automation only
 
-2. **Documentation-Driven**
-   - Write specs first
-   - Implement following specs
-   - Validate against acceptance criteria
+2. **Dual-Track Development**
+   - W0 (Web Tools) fully parallel to P0-P6 (macOS)
+   - SELECT will suggest best parallelization
+   - EXECUTE runs appropriate tests (web or macOS or both)
 
-3. **Thin Wrappers**
+3. **Documentation-Driven**
+   - Workplan.md = strategy + phases + dependencies
+   - TestPlan.md = acceptance criteria for each phase
+   - PRD = atomic, executable steps
+   - Implement following PRD, validate against TestPlan
+
+4. **Thin Wrappers**
    - Commands don't implement logic
    - Commands structure the process
-   - Developer follows documentation
+   - Developer follows documentation (PRD + TestPlan)
 
-4. **Three-Level Hierarchy**
-   - Workplan = strategy
-   - next.md = tactics
-   - PRD = operations
+5. **Testing is First-Class**
+   - Web tests (Jest) run for W0 tasks
+   - Unit/integration tests (XCTest) run for P0-P6 tasks
+   - Performance tests run before release (P1.7, P6.3)
+   - EXECUTE won't commit until tests pass
 
 ---
 
@@ -265,10 +308,25 @@ For detailed error handling, see individual command files.
 
 ## Learn More
 
-- **SELECT.md** — Task selection algorithm, priority rules, dependency checking
-- **PLAN.md** — PRD generation process, input files, output structure
-- **EXECUTE.md** — Workflow phases, execution modes, validation details
-- **PROGRESS.md** — Progress tracking mechanics, auto-detection, manual updates
-- **ARCHIVE.md** — Archiving process, safety checks, INDEX generation
+### Commands
+- **SELECT.md** — Phase selection (W0 vs P0-P6), priority rules, parallelization
+- **PLAN.md** — PRD generation from COMBINED_Workplan + TestPlan
+- **EXECUTE.md** — Pre-flight → work → validation (web + macOS tests) → commit
+- **PROGRESS.md** — Subtask tracking within current task
+- **FLOW.md** — Orchestration of SELECT → PLAN → EXECUTE → ARCHIVE
+- **REVIEW.md** — Code review process after changes
+- **ARCHIVE.md** — Moving completed tasks to history
 
-Each command file contains complete specifications, examples, and error handling.
+### Primitives
+- **COMMIT.md** — Git commit best practices
+- **INSTALL_SWIFT.md** — Swift toolchain setup (one-time)
+- **GITLFS.md** — Git LFS for build cache management
+- **ARCHIVE_TASK.md** — Per-task archival steps
+- **UPDATE_ARCHIVE_INDEX.md** — Archive index maintenance
+
+### Reference Specs
+- **Workplan.md** — Master source of truth (W0 + P0-P6)
+- **TestPlan.md** — Testing strategy aligned to each phase
+- **RULES/01_PRD_PROMPT.md** — PRD generation rules
+
+Each file contains complete specifications, examples, and error handling.

@@ -1,10 +1,14 @@
-# INSTALL_GITLFS — Install Git Large File Storage
+# INSTALL_GITLFS — Install Git Large File Storage (Trevor)
 
-**Version:** 1.0.0
+**Version:** 2.0.0
+**Project:** Trevor Mouse Tremor Filter (macOS phases P0-P6)
 
 ## Purpose
 
-Install Git LFS (Large File Storage) for handling large binary files like build caches. This is optional but recommended for development environments.
+Install Git LFS (Large File Storage) for handling large binary Swift build caches. This is optional but recommended for development environments to speed up builds significantly (82s → 5-10s).
+
+**When needed:** Working on P0-P6 (macOS) tasks
+**When optional:** W0 (Web Tools) tasks or using local-only caching
 
 ---
 
@@ -63,10 +67,10 @@ Git LFS replaces large files with text pointers in Git, while storing the actual
 - ✅ Handles files >100MB (GitHub limit)
 - ✅ Efficient binary file versioning
 
-**Use cases in Hyperprompt:**
-- Build caches (`caches/*.tar.gz`)
-- Large test fixtures
-- Binary assets
+**Use cases in Trevor:**
+- Swift build caches (`caches/swift-build-cache-*.tar.gz`)
+- Trace fixtures (test data)
+- Binary assets (if needed)
 
 ---
 
@@ -197,7 +201,13 @@ git lfs track
 git lfs ls-files
 ```
 
-**Expected output for Hyperprompt:**
+**Expected output for Trevor (macOS):**
+```
+git lfs ls-files
+5ba5dd8071 * caches/swift-build-cache-darwin-arm64.tar.gz
+```
+
+**Expected output for Trevor (Linux, if needed):**
 ```
 git lfs ls-files
 5ba5dd8071 * caches/swift-build-cache-linux-x86_64.tar.gz
@@ -222,10 +232,12 @@ Git LFS is **recommended** if:
 ## Reference
 
 - Official documentation: https://git-lfs.github.com/
-- Hyperprompt build cache: `caches/` directory
+- Trevor build cache: `.github/scripts/` directory
 - Cache scripts:
-  - Create: `./.github/scripts/create-build-cache.sh`
-  - Restore: `./.github/scripts/restore-build-cache.sh`
+  - Create: `./.github/scripts/create-build-cache.sh` (run after successful build)
+  - Restore: `./.github/scripts/restore-build-cache.sh` (run before EXECUTE)
+  - Update: `./.github/scripts/update-build-cache.sh` (run after changing Package.swift)
+- Used by: EXECUTE command (Phase 3 post-flight validation for P0-P6 tasks)
 
 ---
 
@@ -233,6 +245,8 @@ Git LFS is **recommended** if:
 
 - **Installation time:** ~1-2 minutes
 - **Disk space:** ~10-20 MB for Git LFS client
-- **Network usage:** Only when pushing/pulling LFS files
+- **Network usage:** Only when pushing/pulling build cache files
 - **One-time setup** per development environment
 - **Works with existing git commands** - no workflow changes needed
+- **Optional for Trevor:** Use if you want 8x faster builds (82s → 5-10s)
+- **Auto-used by EXECUTE:** If installed, EXECUTE will automatically restore cache during P0-P6 task validation
