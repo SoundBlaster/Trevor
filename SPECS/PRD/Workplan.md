@@ -139,7 +139,7 @@ P6 is final integration
 | ID | Task | Priority | Depends On | Output |
 |---|---|---|---|---|
 | P0.1 | Freeze MVP scope | High | — | `SCOPE.md` | [x] **COMPLETED** |
-| P0.2 | Finalize specs set | High | P0.1 | Specs bundle approved |
+| P0.2 | Finalize specs set | High | P0.1 | Specs bundle approved | [x] **COMPLETED** |
 | P0.3 | Repo structure setup | High | P0.1 | Repo skeleton + CI stub |
 | P0.4 | CI pipeline (build + test) | Medium | P0.3 | Automated CI |
 
