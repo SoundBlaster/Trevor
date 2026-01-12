@@ -15,6 +15,26 @@ import Foundation
 /// signals such as mouse movements affected by tremors.
 ///
 /// Reference: https://www.lifl.fr/~casiez/1euro/
+
+/// Preset configurations for different use cases
+public enum Preset: String, CaseIterable {
+    case fineControl
+    case balanced
+    case aggressive
+
+    /// Returns the parameters for the preset
+    var parameters: (frequency: Double, minCutoff: Double, beta: Double, derivativeCutoff: Double) {
+        switch self {
+        case .fineControl:
+            return (frequency: 60.0, minCutoff: 1.0, beta: 0.1, derivativeCutoff: 1.0)
+        case .balanced:
+            return (frequency: 60.0, minCutoff: 2.0, beta: 0.3, derivativeCutoff: 2.0)
+        case .aggressive:
+            return (frequency: 60.0, minCutoff: 3.0, beta: 0.5, derivativeCutoff: 3.0)
+        }
+    }
+}
+
 public class OneEuroFilter {
     // Filter parameters
     private var frequency: Double
@@ -41,6 +61,18 @@ public class OneEuroFilter {
         self.minCutoff = minCutoff
         self.beta = beta
         self.derivativeCutoff = derivativeCutoff
+    }
+
+    /// Initializes a new One Euro Filter with a preset configuration
+    ///
+    /// - Parameter preset: The preset to use for the filter
+    public convenience init(preset: Preset) {
+        let params = preset.parameters
+        self.init(
+            frequency: params.frequency,
+            minCutoff: params.minCutoff,
+            beta: params.beta,
+            derivativeCutoff: params.derivativeCutoff)
     }
 
     /// Filters the input coordinates using the One Euro Filter algorithm
@@ -87,6 +119,17 @@ public class OneEuroFilter {
         let te = 1.0 / (cutoff * 2.0 * .pi)
         let alpha = 1.0 / (1.0 + te / (dt + 1e-10))  // Add small epsilon to avoid division by zero
         return alpha
+    }
+
+    /// Applies a preset to the filter
+    ///
+    /// - Parameter preset: The preset to apply
+    public func applyPreset(_ preset: Preset) {
+        let params = preset.parameters
+        self.frequency = params.frequency
+        self.minCutoff = params.minCutoff
+        self.beta = params.beta
+        self.derivativeCutoff = params.derivativeCutoff
     }
 
     /// Resets the filter state

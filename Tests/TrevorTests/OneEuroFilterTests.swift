@@ -109,4 +109,71 @@ final class OneEuroFilterTests: XCTestCase {
             }
         }
     }
+
+    func testPresetInitialization() {
+        // Test initialization with each preset
+        let fineControlFilter = OneEuroFilter(preset: .fineControl)
+        let balancedFilter = OneEuroFilter(preset: .balanced)
+        let aggressiveFilter = OneEuroFilter(preset: .aggressive)
+
+        // Verify filters are initialized
+        XCTAssertNotNil(fineControlFilter)
+        XCTAssertNotNil(balancedFilter)
+        XCTAssertNotNil(aggressiveFilter)
+    }
+
+    func testPresetApplication() {
+        let filter = OneEuroFilter(
+            frequency: 60.0, minCutoff: 1.0, beta: 0.1, derivativeCutoff: 1.0)
+
+        // Apply fine control preset
+        filter.applyPreset(.fineControl)
+        let (x1, y1) = filter.filter(x: 10.0, y: 10.0, timestamp: 0.0)
+
+        // Apply balanced preset
+        filter.applyPreset(.balanced)
+        let (x2, y2) = filter.filter(x: 10.0, y: 10.0, timestamp: 0.1)
+
+        // Apply aggressive preset
+        filter.applyPreset(.aggressive)
+        let (x3, y3) = filter.filter(x: 10.0, y: 10.0, timestamp: 0.2)
+
+        // Verify outputs are different (presets produce distinct results)
+        XCTAssertNotEqual(x1, x2)
+        XCTAssertNotEqual(y1, y2)
+        XCTAssertNotEqual(x2, x3)
+        XCTAssertNotEqual(y2, y3)
+    }
+
+    func testPresetParameters() {
+        // Test that each preset has valid parameters
+        let presets = Preset.allCases
+        for preset in presets {
+            let params = preset.parameters
+            XCTAssertGreaterThan(params.minCutoff, 0)
+            XCTAssertGreaterThan(params.beta, 0)
+            XCTAssertGreaterThan(params.derivativeCutoff, 0)
+        }
+    }
+
+    func testPresetSwitchingSmoothness() {
+        let filter = OneEuroFilter(preset: .balanced)
+
+        // Filter some values with balanced preset
+        let (_, _) = filter.filter(x: 5.0, y: 5.0, timestamp: 0.0)
+        let (x2, y2) = filter.filter(x: 5.1, y: 5.1, timestamp: 0.1)
+
+        // Switch to aggressive preset
+        filter.applyPreset(.aggressive)
+
+        // Filter more values - should be smooth transition
+        let (x3, y3) = filter.filter(x: 5.2, y: 5.2, timestamp: 0.2)
+        let (x4, y4) = filter.filter(x: 5.3, y: 5.3, timestamp: 0.3)
+
+        // Verify no sudden jumps in output
+        XCTAssertLessThan(abs(x3 - x2), 10.0)
+        XCTAssertLessThan(abs(y3 - y2), 10.0)
+        XCTAssertLessThan(abs(x4 - x3), 10.0)
+        XCTAssertLessThan(abs(y4 - y3), 10.0)
+    }
 }
