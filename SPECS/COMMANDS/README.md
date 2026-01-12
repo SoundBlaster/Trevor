@@ -1,8 +1,12 @@
 # Trevor: Mouse Tremor Filter — Workflow Commands
 
-**Version:** 2.0.0
-**Project:** Mouse Tremor Filtering (Web Tools + macOS Application)
-**Documentation Source:** [Workplan.md](../PRD/Workplan.md) + [TestPlan.md](../PRD/TestPlan.md)
+**Version:** 3.0.0
+**Project:** Mouse Tremor Filtering (Web Tools W0 + macOS Phases P0-P6)
+**Last Updated:** 2026-01-12
+**Adaptation Status:** ✅ Complete
+**Documentation Sources:**
+- [COMBINED_Workplan.md](../PRD/COMBINED_Workplan.md) — Master task list (W0 + P0-P6)
+- [TestPlan.md](../PRD/TestPlan.md) — QA testing strategy (aligned to phases)
 
 ## Overview
 
@@ -294,39 +298,3 @@ For detailed error handling, see individual command files.
    - Performance tests run before release (P1.7, P6.3)
    - EXECUTE won't commit until tests pass
 
----
-
-## Version History
-
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 2.0.0 | 2025-12-03 | Claude | Simplified to overview (removed duplication) |
-| 1.1.0 | 2025-12-03 | Claude | EXECUTE thin wrapper philosophy |
-| 1.0.0 | 2025-12-03 | Claude | Initial comprehensive version (deprecated) |
-
----
-
-## Learn More
-
-### Commands
-- **SELECT.md** — Phase selection (W0 vs P0-P6), priority rules, parallelization
-- **PLAN.md** — PRD generation from COMBINED_Workplan + TestPlan
-- **EXECUTE.md** — Pre-flight → work → validation (web + macOS tests) → commit
-- **PROGRESS.md** — Subtask tracking within current task
-- **FLOW.md** — Orchestration of SELECT → PLAN → EXECUTE → ARCHIVE
-- **REVIEW.md** — Code review process after changes
-- **ARCHIVE.md** — Moving completed tasks to history
-
-### Primitives
-- **COMMIT.md** — Git commit best practices
-- **INSTALL_SWIFT.md** — Swift toolchain setup (one-time)
-- **GITLFS.md** — Git LFS for build cache management
-- **ARCHIVE_TASK.md** — Per-task archival steps
-- **UPDATE_ARCHIVE_INDEX.md** — Archive index maintenance
-
-### Reference Specs
-- **Workplan.md** — Master source of truth (W0 + P0-P6)
-- **TestPlan.md** — Testing strategy aligned to each phase
-- **RULES/01_PRD_PROMPT.md** — PRD generation rules
-
-Each file contains complete specifications, examples, and error handling.
