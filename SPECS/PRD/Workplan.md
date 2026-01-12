@@ -141,7 +141,7 @@ P6 is final integration
 | P0.1 | Freeze MVP scope | High | — | `SCOPE.md` | [x] **COMPLETED** |
 | P0.2 | Finalize specs set | High | P0.1 | Specs bundle approved | [x] **COMPLETED** |
 | P0.3 | Repo structure setup | High | P0.1 | Repo skeleton + CI stub | [x] **COMPLETED** |
-| P0.4 | CI pipeline (build + test) | Medium | P0.3 | Automated CI |
+| P0.4 | CI pipeline (build + test) | Medium | P0.3 | Automated CI | [x] **COMPLETED** |
 
 **Exit Criteria:**
 - Scope document reviewed and locked
