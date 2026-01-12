@@ -20,17 +20,11 @@ let package = Package(
     targets: [
         .target(
             name: "TrevorLibrary",
-            dependencies: [],
-            resources: [
-                .process("Resources/")
-            ]
+            dependencies: []
         ),
         .target(
             name: "Trevor",
-            dependencies: ["TrevorLibrary"],
-            resources: [
-                .process("Resources/")
-            ]
+            dependencies: ["TrevorLibrary"]
         ),
         .testTarget(
             name: "TrevorTests",
