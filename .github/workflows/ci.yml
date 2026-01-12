@@ -10,11 +10,8 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Build
-      run: swift build
-    - name: Test
-      run: swift test
-```
-
-Now I will update the `next.md` file to mark the task as completed and proceed to the ARCHIVE step.
+      - uses: actions/checkout@v2
+      - name: Build
+        run: swift build
+      - name: Test
+        run: swift test

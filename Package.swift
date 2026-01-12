@@ -11,23 +11,24 @@ let package = Package(
             name: "Trevor",
             targets: ["Trevor"]
         ),
+        .library(
+            name: "TrevorLibrary",
+            targets: ["TrevorLibrary"]
+        ),
     ],
-    dependencies: [
-    ],
+    dependencies: [],
     targets: [
         .target(
+            name: "TrevorLibrary",
+            dependencies: []
+        ),
+        .target(
             name: "Trevor",
-            dependencies: [],
-            resources: [
-                .process("Resources")
-            ]
+            dependencies: ["TrevorLibrary"]
         ),
         .testTarget(
             name: "TrevorTests",
-            dependencies: ["Trevor"]
+            dependencies: ["TrevorLibrary"]
         ),
     ]
 )
-```
-
-Now I will update the `next.md` file to mark the task as completed and proceed to the ARCHIVE step.
