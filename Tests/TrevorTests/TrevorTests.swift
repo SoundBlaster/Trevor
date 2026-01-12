@@ -1,10 +1,10 @@
 // TrevorTests.swift
 import XCTest
 
-@testable import Trevor
+@testable import TrevorLibrary
 
 final class TrevorTests: XCTestCase {
-    func testExample() {
-        XCTAssertTrue(true)
+    func testGreet() {
+        XCTAssertEqual(TrevorLibrary.greet(), "Hello, Trevor!")
     }
 }

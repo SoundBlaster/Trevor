@@ -1,2 +1,4 @@
 // main.swift
-print("Hello, Trevor!")
+import TrevorLibrary
+
+print(TrevorLibrary.greet())
