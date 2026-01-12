@@ -4,5 +4,3 @@ public struct TrevorLibrary {
         return "Hello, Trevor!"
     }
 }
-```
-Now I will update the `main.swift` file to use the library.
