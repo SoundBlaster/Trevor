@@ -10,10 +10,9 @@ let package = Package(
         .executable(
             name: "Trevor",
             targets: ["Trevor"]
-        ),
+        )
     ],
-    dependencies: [
-    ],
+    dependencies: [],
     targets: [
         .target(
             name: "Trevor",
@@ -28,6 +27,3 @@ let package = Package(
         ),
     ]
 )
-```
-
-Now I will update the `next.md` file to mark the task as completed and proceed to the ARCHIVE step.
