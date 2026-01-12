@@ -22,14 +22,14 @@ let package = Package(
             name: "TrevorLibrary",
             dependencies: [],
             resources: [
-                .process("Resources")
+                .process("Resources/")
             ]
         ),
         .target(
             name: "Trevor",
             dependencies: ["TrevorLibrary"],
             resources: [
-                .process("Resources")
+                .process("Resources/")
             ]
         ),
         .testTarget(
