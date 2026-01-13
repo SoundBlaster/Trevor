@@ -156,8 +156,8 @@ P6 is final integration
 | ID | Task | Priority | Depends On | Parallelizable | Output |
 |---|---|---|---|---|---|
 | P1.1 | Define FilterCore API | High | P0.2 | — | Interface specification | [x] **COMPLETED** |
-| P1.2 | Implement One Euro filter | High | P1.1 | — | Filter implementation (Swift) |
-| P1.3 | Implement preset mapping | High | P1.2 | — | Preset configuration table |
+| P1.2 | Implement One Euro filter | High | P1.1 | — | Filter implementation (Swift) | [x] **COMPLETED**
+| P1.3 | Implement preset mapping | High | P1.2 | — | Preset configuration table | [x] **COMPLETED**
 | P1.4 | Slider → params mapping | High | P1.3 | — | UI mapping function |
 | P1.5 | dt normalization & clamping | High | P1.2 | — | Stable delta-time logic |
 | P1.6 | Filter invariants tests | High | P1.2 | — | Comprehensive unit tests |
