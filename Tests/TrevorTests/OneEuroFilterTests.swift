@@ -112,9 +112,9 @@ final class OneEuroFilterTests: XCTestCase {
 
     func testPresetInitialization() {
         // Test initialization with each preset
-        let fineControlFilter = OneEuroFilter(preset: .fineControl)
-        let balancedFilter = OneEuroFilter(preset: .balanced)
-        let aggressiveFilter = OneEuroFilter(preset: .aggressive)
+        let fineControlFilter = OneEuroFilter(frequency: 60.0, preset: .fineControl)
+        let balancedFilter = OneEuroFilter(frequency: 60.0, preset: .balanced)
+        let aggressiveFilter = OneEuroFilter(frequency: 60.0, preset: .aggressive)
 
         // Verify filters are initialized
         XCTAssertNotNil(fineControlFilter)
@@ -157,7 +157,7 @@ final class OneEuroFilterTests: XCTestCase {
     }
 
     func testPresetSwitchingSmoothness() {
-        let filter = OneEuroFilter(preset: .balanced)
+        let filter = OneEuroFilter(frequency: 60.0, preset: .balanced)
 
         // Filter some values with balanced preset
         let (_, _) = filter.filter(x: 5.0, y: 5.0, timestamp: 0.0)
@@ -175,5 +175,75 @@ final class OneEuroFilterTests: XCTestCase {
         XCTAssertLessThan(abs(y3 - y2), 10.0)
         XCTAssertLessThan(abs(x4 - x3), 10.0)
         XCTAssertLessThan(abs(y4 - y3), 10.0)
+    }
+
+    // MARK: - Slider Mapping Tests
+
+    func testSliderMappingMin() {
+        let params = OneEuroFilter.parametersForSliderPosition(0.0)
+        XCTAssertEqual(params.minCutoff, 1.0, accuracy: 0.01)
+        XCTAssertEqual(params.beta, 0.1, accuracy: 0.01)
+        XCTAssertEqual(params.derivativeCutoff, 1.0, accuracy: 0.01)
+    }
+
+    func testSliderMappingMax() {
+        let params = OneEuroFilter.parametersForSliderPosition(1.0)
+        XCTAssertEqual(params.minCutoff, 3.0, accuracy: 0.01)
+        XCTAssertEqual(params.beta, 0.5, accuracy: 0.01)
+        XCTAssertEqual(params.derivativeCutoff, 3.0, accuracy: 0.01)
+    }
+
+    func testSliderMappingMid() {
+        let params = OneEuroFilter.parametersForSliderPosition(0.5)
+        XCTAssertEqual(params.minCutoff, 2.0, accuracy: 0.01)
+        XCTAssertEqual(params.beta, 0.3, accuracy: 0.01)
+        XCTAssertEqual(params.derivativeCutoff, 2.0, accuracy: 0.01)
+    }
+
+    func testSliderMappingClamping() {
+        // Test that slider positions outside [0, 1] are clamped
+        let belowMin = OneEuroFilter.parametersForSliderPosition(-0.5)
+        let aboveMax = OneEuroFilter.parametersForSliderPosition(1.5)
+
+        XCTAssertEqual(belowMin.minCutoff, 1.0, accuracy: 0.01)
+        XCTAssertEqual(aboveMax.minCutoff, 3.0, accuracy: 0.01)
+    }
+
+    func testSliderApplication() {
+        let filter = OneEuroFilter(frequency: 60.0, preset: .balanced)
+
+        // Apply min slider position
+        filter.applySliderPosition(0.0)
+        let (x1, y1) = filter.filter(x: 10.0, y: 10.0, timestamp: 0.0)
+
+        // Apply max slider position
+        filter.applySliderPosition(1.0)
+        let (x2, y2) = filter.filter(x: 10.0, y: 10.0, timestamp: 0.1)
+
+        // Verify outputs are different
+        XCTAssertNotEqual(x1, x2)
+        XCTAssertNotEqual(y1, y2)
+    }
+
+    func testSliderInitialization() {
+        // Test initialization with slider positions
+        let minFilter = OneEuroFilter(frequency: 60.0, sliderPosition: 0.0)
+        let maxFilter = OneEuroFilter(frequency: 60.0, sliderPosition: 1.0)
+
+        XCTAssertNotNil(minFilter)
+        XCTAssertNotNil(maxFilter)
+    }
+
+    func testSliderSmoothness() {
+        _ = OneEuroFilter(frequency: 60.0, sliderPosition: 0.5)
+
+        // Test small changes in slider position
+        let params1 = OneEuroFilter.parametersForSliderPosition(0.5)
+        let params2 = OneEuroFilter.parametersForSliderPosition(0.51)
+
+        // Verify small changes result in small parameter differences
+        XCTAssertLessThan(abs(params2.minCutoff - params1.minCutoff), 0.1)
+        XCTAssertLessThan(abs(params2.beta - params1.beta), 0.1)
+        XCTAssertLessThan(abs(params2.derivativeCutoff - params1.derivativeCutoff), 0.1)
     }
 }

@@ -16,21 +16,26 @@ import Foundation
 ///
 /// Reference: https://www.lifl.fr/~casiez/1euro/
 
-/// Preset configurations for different use cases
+/// Preset configurations for the One Euro filter
+///
+/// Each preset provides a predefined set of parameters optimized for different use cases.
 public enum Preset: String, CaseIterable {
     case fineControl
     case balanced
     case aggressive
 
     /// Returns the parameters for the preset
-    var parameters: (frequency: Double, minCutoff: Double, beta: Double, derivativeCutoff: Double) {
+    public var parameters: (minCutoff: Double, beta: Double, derivativeCutoff: Double) {
         switch self {
         case .fineControl:
-            return (frequency: 60.0, minCutoff: 1.0, beta: 0.1, derivativeCutoff: 1.0)
+            // Minimal smoothing for precise tasks (e.g., graphic design, coding)
+            return (minCutoff: 1.0, beta: 0.1, derivativeCutoff: 1.0)
         case .balanced:
-            return (frequency: 60.0, minCutoff: 2.0, beta: 0.3, derivativeCutoff: 2.0)
+            // General use with balanced smoothing
+            return (minCutoff: 2.0, beta: 0.3, derivativeCutoff: 2.0)
         case .aggressive:
-            return (frequency: 60.0, minCutoff: 3.0, beta: 0.5, derivativeCutoff: 3.0)
+            // Maximum smoothing for severe tremors
+            return (minCutoff: 3.0, beta: 0.5, derivativeCutoff: 3.0)
         }
     }
 }
@@ -65,13 +70,25 @@ public class OneEuroFilter {
 
     /// Initializes a new One Euro Filter with a preset configuration
     ///
-    /// - Parameter preset: The preset to use for the filter
-    public convenience init(preset: Preset) {
+    /// - Parameters:
+    ///   - frequency: The expected frequency of the input signal (in Hz)
+    ///   - preset: The preset configuration to use
+    public convenience init(frequency: Double, preset: Preset) {
         let params = preset.parameters
         self.init(
-            frequency: params.frequency,
-            minCutoff: params.minCutoff,
-            beta: params.beta,
+            frequency: frequency, minCutoff: params.minCutoff, beta: params.beta,
+            derivativeCutoff: params.derivativeCutoff)
+    }
+
+    /// Initializes a new One Euro Filter with a slider position
+    ///
+    /// - Parameters:
+    ///   - frequency: The expected frequency of the input signal (in Hz)
+    ///   - sliderPosition: The slider position (0.0 to 1.0)
+    public convenience init(frequency: Double, sliderPosition: Double) {
+        let params = OneEuroFilter.parametersForSliderPosition(sliderPosition)
+        self.init(
+            frequency: frequency, minCutoff: params.minCutoff, beta: params.beta,
             derivativeCutoff: params.derivativeCutoff)
     }
 
@@ -109,6 +126,47 @@ public class OneEuroFilter {
         return (filteredX, filteredY)
     }
 
+    /// Applies a preset to the filter
+    ///
+    /// - Parameter preset: The preset to apply
+    public func applyPreset(_ preset: Preset) {
+        let params = preset.parameters
+        self.minCutoff = params.minCutoff
+        self.beta = params.beta
+        self.derivativeCutoff = params.derivativeCutoff
+    }
+
+    /// Applies a slider position to the filter
+    ///
+    /// - Parameter sliderPosition: The slider position (0.0 to 1.0)
+    public func applySliderPosition(_ sliderPosition: Double) {
+        let params = OneEuroFilter.parametersForSliderPosition(sliderPosition)
+        self.minCutoff = params.minCutoff
+        self.beta = params.beta
+        self.derivativeCutoff = params.derivativeCutoff
+    }
+
+    /// Maps slider position to filter parameters
+    ///
+    /// - Parameter sliderPosition: The slider position (0.0 to 1.0)
+    /// - Returns: Filter parameters (minCutoff, beta, derivativeCutoff)
+    public static func parametersForSliderPosition(_ sliderPosition: Double) -> (
+        minCutoff: Double, beta: Double, derivativeCutoff: Double
+    ) {
+        // Clamp slider position to valid range
+        let clampedPosition = max(0.0, min(1.0, sliderPosition))
+
+        // Linear mapping from slider position to filter parameters
+        // minCutoff: 1.0 (min) to 3.0 (max)
+        // beta: 0.1 (min) to 0.5 (max)
+        // derivativeCutoff: 1.0 (min) to 3.0 (max)
+        let minCutoff = 1.0 + clampedPosition * 2.0
+        let beta = 0.1 + clampedPosition * 0.4
+        let derivativeCutoff = 1.0 + clampedPosition * 2.0
+
+        return (minCutoff, beta, derivativeCutoff)
+    }
+
     /// Calculates the alpha value for the filter
     ///
     /// - Parameters:
@@ -119,17 +177,6 @@ public class OneEuroFilter {
         let te = 1.0 / (cutoff * 2.0 * .pi)
         let alpha = 1.0 / (1.0 + te / (dt + 1e-10))  // Add small epsilon to avoid division by zero
         return alpha
-    }
-
-    /// Applies a preset to the filter
-    ///
-    /// - Parameter preset: The preset to apply
-    public func applyPreset(_ preset: Preset) {
-        let params = preset.parameters
-        self.frequency = params.frequency
-        self.minCutoff = params.minCutoff
-        self.beta = params.beta
-        self.derivativeCutoff = params.derivativeCutoff
     }
 
     /// Resets the filter state
